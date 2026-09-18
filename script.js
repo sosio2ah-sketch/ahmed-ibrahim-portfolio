@@ -1,16 +1,51 @@
 // ============================
 // عرض المشاريع تلقائياً (1.jpg - 33.jpg)
+// يدعم صيغ: jpg, JPG, png, jpeg
 // ============================
 const projectsGallery = document.getElementById('projectsGallery');
 const totalProjects = 33;
 
+const extensions = ['.jpg', '.JPG', '.png', '.PNG', '.jpeg'];
+
+function tryLoadImage(basePath, extensions, onSuccess, onFail) {
+    let index = 0;
+    
+    function tryNext() {
+        if (index >= extensions.length) {
+            onFail();
+            return;
+        }
+        
+        const testImg = new Image();
+        testImg.onload = () => onSuccess(basePath + extensions[index]);
+        testImg.onerror = () => {
+            index++;
+            tryNext();
+        };
+        testImg.src = basePath + extensions[index];
+    }
+    
+    tryNext();
+}
+
 for (let i = 1; i <= totalProjects; i++) {
     const img = document.createElement('img');
-    img.src = i + '.jpg';
     img.alt = 'مشروع ' + i;
     img.loading = 'lazy';
-    img.onclick = () => openLightbox(img.src);
-    projectsGallery.appendChild(img);
+    
+    tryLoadImage(
+        i.toString(),
+        extensions,
+        (src) => {
+            img.src = src;
+            img.onclick = () => openLightbox(src);
+            projectsGallery.appendChild(img);
+        },
+        () => {
+            // إذا ما لقى الصورة، ما يضيف شي
+            console.warn('لم يتم العثور على صورة المشروع رقم ' + i);
+        }
+    );
 }
 
 // ============================
@@ -18,14 +53,25 @@ for (let i = 1; i <= totalProjects; i++) {
 // ============================
 const certificatesGrid = document.getElementById('certificatesGrid');
 const totalCertificates = 13;
+const certExtensions = ['.jpg', '.JPG', '.png', '.PNG', '.jpeg'];
 
 for (let i = 1; i <= totalCertificates; i++) {
     const img = document.createElement('img');
-    img.src = 'Cert' + i + '.jpg';
     img.alt = 'شهادة ' + i;
     img.loading = 'lazy';
-    img.onclick = () => openLightbox(img.src);
-    certificatesGrid.appendChild(img);
+    
+    tryLoadImage(
+        'Cert' + i,
+        certExtensions,
+        (src) => {
+            img.src = src;
+            img.onclick = () => openLightbox(src);
+            certificatesGrid.appendChild(img);
+        },
+        () => {
+            console.warn('لم يتم العثور على الشهادة رقم ' + i);
+        }
+    );
 }
 
 // ============================
@@ -53,7 +99,6 @@ lightbox.onclick = (e) => {
     }
 };
 
-// إغلاق بـ ESC
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeLightbox();
